@@ -14,7 +14,18 @@
  *   oldact — previous handler is stored here if not NULL (ignored here)
  *
  * int sigemptyset(sigset_t *set);
- *   initializes the signal mask to empty — no signals blocked during handler
+ *   initializes sa_mask to empty — the set of signals blocked during handler execution
+ *   with empty mask: only the handled signal (SIGUSR1) is auto-blocked by the kernel;
+ *     any other signal (e.g. SIGUSR2) can interrupt the handler mid-execution
+ *   with selective mask (sigaddset): named signals are also blocked and queued
+ *     until the handler returns, preventing interleaving between handlers
+ *   with full mask (sigfillset): all signals blocked during handler — used rarely,
+ *     only when the handler must not be interrupted under any circumstance
+ *   sigemptyset is the common default — fine for short, reentrant-safe handlers
+ *
+ *   note on queuing: the handled signal is auto-blocked so if it arrives again
+ *   while the handler runs it is queued and delivered once; a third instance is
+ *   dropped — POSIX only guarantees at least one delivery, not all
  *
  * int pause(void);
  *   suspends the process until any signal arrives
